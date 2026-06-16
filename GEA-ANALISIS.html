@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard GEA - Análisis General</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #1e293b; min-height: 100vh; }
+
+.header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom: 3px solid #3b82f6;
+  padding: 18px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo-circle {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; color: #fff;
+}
+.header-title { font-size: 20px; font-weight: 700; color: #fff; }
+.header-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.header-date { font-size: 12px; color: #64748b; }
+
+.nav-tabs {
+  display: flex; gap: 4px;
+  background: #ffffff; padding: 8px 32px;
+  border-bottom: 1px solid #e2e8f0; flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.tab-btn {
+  padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; background: transparent; color: #64748b; transition: all 0.15s;
+}
+.tab-btn.active { background: #3b82f6; color: #fff; }
+.tab-btn:hover:not(.active) { background: #f1f5f9; color: #1e293b; }
+.tab-btn.admin-btn { border: 1px solid #e2e8f0; color: #64748b; margin-left: auto; }
+.tab-btn.admin-btn.active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+
+.main { padding: 24px 32px; }
+.section { display: none; }
+.section.active { display: block; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.kpi-card {
+  background: #ffffff; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-card.blue::before { background: #3b82f6; }
+.kpi-card.green::before { background: #10b981; }
+.kpi-card.amber::before { background: #f59e0b; }
+.kpi-card.red::before { background: #ef4444; }
+.kpi-card.purple::before { background: #8b5cf6; }
+.kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: #1e293b; }
+.kpi-unit { font-size: 13px; color: #94a3b8; }
+.kpi-arrow { display: flex; align-items: center; gap: 4px; font-size: 12px; margin-top: 6px; flex-wrap: wrap; }
+.arrow-up { color: #10b981; }
+.arrow-down { color: #ef4444; }
+.arrow-neutral { color: #64748b; }
+
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+.chart-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+.chart-subtitle { font-size: 11px; color: #64748b; margin-bottom: 16px; }
+.chart-wrap { position: relative; }
+
+.trend-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.trend-table th { text-align: left; padding: 8px 12px; color: #64748b; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; }
+.trend-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+.trend-table tr:last-child td { border-bottom: none; }
+.trend-table tr:hover td { background: #f8fafc; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge.green { background: #052e16; color: #4ade80; }
+.badge.red { background: #450a0a; color: #f87171; }
+.badge.yellow { background: #422006; color: #fbbf24; }
+.badge.neutral { background: #f1f5f9; color: #64748b; }
+
+.person-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; gap: 8px; }
+.person-row:last-child { border-bottom: none; }
+.person-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.person-info { flex: 1; margin-left: 12px; min-width: 120px; }
+.person-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+.person-dep { font-size: 11px; color: #475569; }
+.person-stats { display: flex; gap: 16px; text-align: right; flex-wrap: wrap; }
+.stat-lbl { font-size: 10px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-val { font-size: 13px; font-weight: 700; color: #1e293b; }
+
+.section-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.section-title i { color: #3b82f6; font-size: 18px; }
+
+.month-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+
+/* ===== FORMULARIO ===== */
+.form-section {
+  background: #ffffff; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.form-section-title {
+  font-size: 14px; font-weight: 700; color: #1e293b;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; gap: 8px;
+}
+.form-section-title i { color: #8b5cf6; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 9px 12px; color: #1e293b; font-size: 13px; width: 100%;
+  transition: border-color 0.2s;
+}
+.form-input:focus { outline: none; border-color: #3b82f6; background: #fff; }
+.form-input::placeholder { color: #94a3b8; }
+
+.btn-save {
+  background: #3b82f6; color: #fff; border: none; border-radius: 8px;
+  padding: 11px 28px; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+}
+.btn-save:hover { background: #2563eb; }
+.btn-secondary {
+  background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 11px 20px; font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+}
+.btn-secondary:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+.btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+.alert-success {
+  background: #052e16; border: 1px solid #166534; border-radius: 8px;
+  padding: 12px 16px; color: #4ade80; font-size: 13px;
+  display: none; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.alert-success.show { display: flex; }
+
+.meses-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.mes-chip {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b;
+  transition: all 0.2s;
+}
+.mes-chip.active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+.mes-chip.has-data { border-color: #cbd5e1; color: #475569; }
+
+.agente-form-card {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 16px; margin-bottom: 12px;
+}
+.agente-form-card .agente-nombre {
+  font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 12px;
+}
+.historial-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-radius: 6px; background: #0f1117;
+  margin-bottom: 6px; font-size: 12px;
+}
+.historial-mes { color: #60a5fa; font-weight: 600; }
+.historial-vals { color: #94a3b8; }
+.historial-delete { color: #475569; cursor: pointer; font-size: 16px; }
+.historial-delete:hover { color: #ef4444; }
+
+.tc-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #1e2a42; border-radius: 6px; padding: 4px 10px;
+  font-size: 11px; color: #fbbf24; margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  .header { padding: 14px 16px; }
+  .nav-tabs { padding: 6px 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-circle">G</div>
+    <div>
+      <div class="header-title">GEA — Análisis General</div>
+      <div class="header-sub" id="header-sub">Dashboard de Operaciones · 2026</div>
+    </div>
+  </div>
+  <div class="header-date"><i class="ti ti-calendar"></i> <span id="header-rango">Ene — May 2026</span></div>
+</div>
+
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('resumen',this)"><i class="ti ti-layout-dashboard"></i> Resumen</button>
+  <button class="tab-btn" onclick="showTab('cabina',this)"><i class="ti ti-headset"></i> Cabina</button>
+  <button class="tab-btn" onclick="showTab('tmk',this)"><i class="ti ti-phone-call"></i> TMK</button>
+  <button class="tab-btn" onclick="showTab('rotacion',this)"><i class="ti ti-users"></i> Rotación</button>
+  <button class="tab-btn admin-btn" onclick="showTab('admin',this)"><i class="ti ti-settings"></i> Actualizar datos</button>
+</div>
+
+<div class="main">
+
+<!-- ========== RESUMEN ========== -->
+<div id="tab-resumen" class="section active">
+  <div class="section-title"><i class="ti ti-chart-pie"></i> Vista General</div>
+  <div class="kpi-row" id="kpi-resumen"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Nivel de Abandono Promedio — Cabina</div>
+      <div class="chart-subtitle">Tendencia mensual</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartAbandonoProm" role="img" aria-label="Abandono promedio mensual cabina">Abandono promedio mensual</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Total Abandono Acumulado — Cabina</div>
+      <div class="chart-subtitle">Suma por mes</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartAbandonoTot" role="img" aria-label="Total abandono acumulado">Total abandono acumulado</canvas></div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Comisiones TMK Totales (USD)</div>
+      <div class="chart-subtitle">Resumen mensual acumulado</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chartTMKTotalRes" role="img" aria-label="Total comisiones TMK">Total comisiones TMK</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Comisiones TMK — Q por Agente</div>
+      <div class="chart-subtitle">Comparativa mensual</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chartTMKRes" role="img" aria-label="Comisiones TMK por agente">Comisiones TMK por agente</canvas></div>
+    </div>
+  </div>
+  <div class="chart-card full" style="margin-top:20px">
+      <div class="chart-title">Rotación por Departamento</div>
+      <div class="chart-subtitle">Evolución mensual</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chartRotRes" role="img" aria-label="Rotacion por departamento">Rotación por departamento</canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CABINA ========== -->
+<div id="tab-cabina" class="section">
+  <div class="section-title"><i class="ti ti-headset"></i> Cabina — Nivel de Abandono</div>
+  <div class="kpi-row" id="kpi-cabina"></div>
+  <div class="chart-card full" style="margin-bottom:18px">
+    <div class="chart-title">Comparativa Mes a Mes</div>
+    <div class="chart-subtitle">Con indicador de tendencia</div>
+    <div style="overflow-x:auto;margin-top:8px">
+      <table class="trend-table" id="tablaCabina"><thead><tr>
+        <th>Mes</th><th>Total Abandono</th><th>Promedio Diario</th><th>Tendencia</th><th>Estado</th>
+      </tr></thead><tbody id="cabinaTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Total Abandono Mensual (%)</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chartCabinaTotBar" role="img" aria-label="Total abandono"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Promedio Diario Mensual (%)</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chartCabinaPromBar" role="img" aria-label="Promedio diario"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TMK ========== -->
+<div id="tab-tmk" class="section">
+  <div class="section-title"><i class="ti ti-phone-call"></i> TMK — Comisiones por Agente</div>
+  <div class="kpi-row" id="kpi-tmk"></div>
+  <div class="chart-card full" style="margin-bottom:18px">
+    <div class="chart-title">Tendencia de Comisiones Totales (USD)</div>
+    <div class="chart-subtitle">Crecimiento porcentual mes a mes</div>
+    <div class="chart-wrap" style="height:250px"><canvas id="chartTMKTotal" role="img" aria-label="Evolucion total comisiones TMK">Evolución total comisiones TMK</canvas></div>
+  </div>
+  <div class="chart-card" style="margin-bottom:18px">
+    <div class="chart-title">Desempeño por Agente</div>
+    <div class="chart-subtitle">Con flechas de tendencia Q comisiones</div>
+    <div id="agentes-list" style="margin-top:12px"></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Q Comisiones por Agente y Mes</div>
+      <div class="chart-subtitle">Comparativa mensual</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chartTMKQ" role="img" aria-label="Q comisiones por agente">Q comisiones por agente</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">$ USD y Q GTQ — Comisiones</div>
+      <div class="chart-subtitle">T/C: <span id="tc-label">Q7.62</span> por $1</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chartTMKDollar" role="img" aria-label="Comisiones en USD y GTQ">Comisiones USD y GTQ</canvas></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Tabla de Tendencias — Comisiones</div>
+    <div class="chart-subtitle">Flechas por mes comparado con anterior</div>
+    <div style="overflow-x:auto;margin-top:8px">
+      <table class="trend-table"><thead><tr id="tmkThead"></tr></thead><tbody id="tmkTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ROTACION ========== -->
+<div id="tab-rotacion" class="section">
+  <div class="section-title"><i class="ti ti-users"></i> Rotación por Departamento</div>
+  <div class="kpi-row" id="kpi-rot"></div>
+  <div class="chart-card full" style="margin-bottom:18px">
+    <div class="chart-title">Rotación Mensual por Departamento</div>
+    <div class="chart-subtitle">Con flechas de tendencia</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="chartRot" role="img" aria-label="Rotacion mensual departamentos">Rotación mensual por departamento</canvas></div>
+  </div>
+  <div class="chart-card full">
+    <div class="chart-title">Tabla de Tendencias — Rotación</div>
+    <div style="overflow-x:auto;margin-top:8px">
+      <table class="trend-table"><thead><tr id="rotThead"></tr></thead><tbody id="rotTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ADMIN ========== -->
+<div id="tab-admin" class="section">
+  <div class="section-title"><i class="ti ti-settings" style="color:#7c3aed"></i> Panel de Actualización Mensual</div>
+
+  <div class="alert-success" id="alert-ok">
+    <i class="ti ti-circle-check"></i> ¡Datos guardados! El dashboard se ha actualizado.
+  </div>
+
+  <!-- Selector de mes -->
+  <div class="form-section">
+    <div class="form-section-title"><i class="ti ti-calendar-plus"></i> Selecciona el mes a ingresar</div>
+    <div class="meses-nav" id="meses-nav"></div>
+    <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:4px">
+      <div class="form-group">
+        <label class="form-label">Año</label>
+        <select class="form-input" id="input-anio" onchange="buildAdmin()">
+          <option>2026</option><option>2027</option><option>2028</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de cambio USD → GTQ</label>
+        <input type="number" class="form-input" id="input-tc" value="7.62" step="0.01" placeholder="7.62">
+      </div>
+    </div>
+  </div>
+
+  <!-- CABINA -->
+  <div class="form-section">
+    <div class="form-section-title"><i class="ti ti-headset"></i> Datos Cabina — Mes seleccionado</div>
+    <div id="cab-daily-inputs">
+      <!-- Aquí se renderizarán los inputs diarios -->
+    </div>
+  </div>
+
+  <!-- TMK agentes -->
+  <div class="form-section">
+    <div class="form-section-title"><i class="ti ti-phone-call"></i> Comisiones TMK — Mes seleccionado</div>
+    <div id="tmk-agentes-form"></div>
+  </div>
+
+  <!-- ROTACION -->
+  <div class="form-section">
+    <div class="form-section-title"><i class="ti ti-users"></i> Rotación por Departamento — Mes seleccionado</div>
+    <div class="form-grid" id="rot-form"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-save" onclick="guardarMes()"><i class="ti ti-device-floppy"></i> Guardar y actualizar dashboard</button>
+    <button class="btn-secondary" onclick="exportarJSON()"><i class="ti ti-download"></i> Exportar datos</button>
+    <button class="btn-secondary" onclick="if(confirm('¿Borrar TODOS los datos?'))limpiarTodo()"><i class="ti ti-trash"></i> Limpiar todo</button>
+  </div>
+
+  <!-- Historial -->
+  <div class="form-section" style="margin-top:20px">
+    <div class="form-section-title"><i class="ti ti-history"></i> Historial de datos ingresados</div>
+    <div id="historial-list"><p style="color:#475569;font-size:13px">Sin datos aún.</p></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// =============================================
+// DATOS INICIALES (Mar–May 2026 del Excel)
+// =============================================
+const MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const DEPTOS = ['OPERACIONES','TMK','ADMON/GERENCIA'];
+const AGENTES = [
+  { name:'Consuelo Herrera', short:'C.Herrera', color:'#3b82f6' },
+  { name:'Evelyn Velásquez', short:'E.Velásquez', color:'#10b981' },
+  { name:'Laura Alonzo', short:'L.Alonzo', color:'#f59e0b' },
+  { name:'Lidia Ispache', short:'L.Ispache', color:'#ef4444' },
+  { name:'Luis Cinto', short:'L.Cinto', color:'#8b5cf6' },
+  { name:'Eder García', short:'E.García', color:'#14b8a6' },
+];
+
+const DATOS_INICIALES = {
+  tc: 7.62,
+  cabina: {
+    3: [
+      {day:1, val:0.00}, {day:2, val:0.00}, {day:3, val:0.00}, {day:4, val:0.00}, {day:5, val:0.75}, 
+      {day:6, val:3.18}, {day:7, val:0.00}, {day:8, val:0.00}, {day:9, val:0.00}, {day:10, val:0.90}, 
+      {day:11, val:2.88}, {day:12, val:1.66}, {day:13, val:2.72}, {day:14, val:3.30}, {day:15, val:1.03}, 
+      {day:16, val:0.56}, {day:17, val:1.90}, {day:18, val:2.83}, {day:19, val:0.79}, {day:20, val:0.00}, 
+      {day:21, val:0.00}, {day:22, val:0.00}, {day:23, val:0.00}, {day:24, val:0.00}, {day:25, val:0.00},
+      {day:26, val:0.00}, {day:27, val:0.00}, {day:28, val:0.00}, {day:29, val:0.00}, {day:30, val:0.00},
+      {day:31, val:0.00}
+    ],
+    4: [
+      {day:1, val:0.00}, {day:2, val:0.00}, {day:3, val:0.00}, {day:4, val:0.00}, {day:5, val:0.00},
+      {day:6, val:0.00}, {day:7, val:0.00}, {day:8, val:0.00}, {day:9, val:0.83}, {day:10, val:0.00},
+      {day:11, val:4.85}, {day:12, val:0.00}, {day:13, val:0.00}, {day:14, val:1.45}, {day:15, val:0.87},
+      {day:16, val:0.00}, {day:17, val:0.00}, {day:18, val:0.00}, {day:19, val:0.00}, {day:20, val:0.00},
+      {day:21, val:0.66}, {day:22, val:0.00}, {day:23, val:0.00}, {day:24, val:1.49}, {day:25, val:0.82},
+      {day:26, val:0.00}, {day:27, val:0.00}, {day:28, val:0.00}, {day:29, val:0.00}, {day:30, val:1.67}
+    ],
+    5: [
+      {day:1, val:0.00}, {day:2, val:3.96}, {day:3, val:1.15}, {day:4, val:0.00}, {day:5, val:0.97},
+      {day:6, val:0.00}, {day:7, val:0.88}, {day:8, val:0.00}, {day:9, val:0.00}, {day:10, val:1.69},
+      {day:11, val:1.16}, {day:12, val:0.79}, {day:13, val:0.00}, {day:14, val:1.38}, {day:15, val:2.50},
+      {day:16, val:1.49}, {day:17, val:2.44}, {day:18, val:0.50}, {day:19, val:0.00}, {day:20, val:0.00},
+      {day:21, val:0.00}, {day:22, val:0.83}, {day:23, val:0.77}, {day:24, val:0.00}, {day:25, val:1.72},
+      {day:26, val:1.31}, {day:27, val:0.74}, {day:28, val:0.88}, {day:29, val:0.00}, {day:30, val:0.00},
+      {day:31, val:2.53}
+    ],
+  },
+  tmk: {
+    3: [
+      { q: 202.5, d: 26.40 }, { q: 105, d: 13.69 }, { q: 157.5, d: 20.53 },
+      { q: 280.5, d: 36.57 }, { q: 135, d: 17.60 }, { q: 240, d: 31.29 }
+    ],
+    4: [
+      { q: 285, d: 37.16 }, { q: 142.5, d: 18.58 }, { q: 180, d: 23.47 },
+      { q: 240, d: 31.29 }, { q: 255, d: 33.25 }, { q: 210, d: 27.38 }
+    ],
+    5: [
+      { q: 457.5, d: 59.65 }, { q: 142.5, d: 18.58 }, { q: 135, d: 17.60 },
+      { q: 0, d: 0 }, { q: 225, d: 29.34 }, { q: 150, d: 19.56 }
+    ],
+  },
+  rotacion: {
+    1: { 'OPERACIONES': 0, 'TMK': 0, 'ADMON/GERENCIA': 0 },
+    2: { 'OPERACIONES': 4.8, 'TMK': 0, 'ADMON/GERENCIA': 7.1 },
+    3: { 'OPERACIONES': 0, 'TMK': 0, 'ADMON/GERENCIA': 0 },
+    4: { 'OPERACIONES': 0, 'TMK': 0, 'ADMON/GERENCIA': 0 },
+    5: { 'OPERACIONES': 0, 'TMK': 0, 'ADMON/GERENCIA': 0 },
+  }
+};
+
+// Cargar desde localStorage o usar datos iniciales
+function cargarDatos() {
+  try {
+    const s = localStorage.getItem('gea_datos');
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(DATOS_INICIALES));
+  } catch(e) { return JSON.parse(JSON.stringify(DATOS_INICIALES)); }
+}
+function guardarDatos(d) {
+  try { localStorage.setItem('gea_datos', JSON.stringify(d)); } catch(e) {}
+}
+
+let DB = cargarDatos();
+let mesSeleccionado = 6; // Junio por defecto al abrir admin (mes nuevo)
+
+// =============================================
+// PALETA
+// =============================================
+const P = {
+  blue:'#2563eb', green:'#10b981', amber:'#f59e0b', red:'#ef4444',
+  purple:'#8b5cf6', teal:'#0d9488', grid:'#e2e8f0', text:'#64748b'
+};
+
+// =============================================
+// TAB NAVIGATION
+// =============================================
+function showTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  
+  // Forzar renderizado al cambiar de pestaña para que Chart.js detecte el tamaño
+  if(name === 'admin') { buildAdmin(); }
+  else if(name === 'resumen') { renderResumen(); }
+  else if(name === 'tmk') { renderTMK(); }
+  else if(name === 'rotacion') { renderRotacion(); }
+}
+
+// =============================================
+// CABINA STATS HELPER
+// =============================================
+function getCabinaStats(month) {
+  const dailyData = DB.cabina[month] || [];
+  if (!Array.isArray(dailyData) || dailyData.length === 0) {
+    return { total: 0, prom: 0, dias: 0 };
+  }
+
+  let sumDailyValues = 0;
+  let daysWithAbandonment = 0;
+
+  dailyData.forEach(entry => {
+    sumDailyValues += entry.val;
+    if (entry.val > 0) {
+      daysWithAbandonment++;
+    }
+  });
+  return { total: sumDailyValues, prom: dailyData.length > 0 ? sumDailyValues / dailyData.length : 0, dias: daysWithAbandonment };
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function getMeses() {
+  const keys = new Set([
+    ...Object.keys(DB.cabina).map(Number),
+    ...Object.keys(DB.tmk).map(Number),
+    ...Object.keys(DB.rotacion).map(Number),
+  ]);
+  return [...keys].sort((a,b)=>a-b);
+}
+
+function arrow(cur, prev) {
+  if(prev === undefined || prev === null) return '<span style="color:#64748b">—</span>';
+  if(cur > prev) return '<i class="ti ti-arrow-up" style="color:#10b981;font-size:16px"></i> <span style="color:#10b981">+'+Math.abs((cur-prev).toFixed(2))+'</span>';
+  if(cur < prev) return '<i class="ti ti-arrow-down" style="color:#ef4444;font-size:16px"></i> <span style="color:#ef4444">'+((cur-prev).toFixed(2))+'</span>';
+  return '<i class="ti ti-minus" style="color:#64748b"></i>';
+}
+
+function arrowVal(cur, prev) {
+  if(prev === undefined || cur === prev) return '';
+  return cur > prev ? '↑' : '↓';
+}
+
+function pillColor(m) {
+  const colors = ['#1e3a5f:#60a5fa','#1a3a28:#4ade80','#3b1a5e:#c084fc','#1f2a10:#86efac','#2a1a3e:#a78bfa','#1a2f3e:#67e8f9'];
+  const idx = (m-1) % colors.length;
+  const [bg,fg] = colors[idx].split(':');
+  return `background:${bg};color:${fg}`;
+}
+
+// Destruir charts anteriores
+const chartInstances = {};
+function makeChart(id, config) {
+  if(chartInstances[id]) { chartInstances[id].destroy(); }
+  const el = document.getElementById(id);
+  if(!el) return;
+  chartInstances[id] = new Chart(el, config);
+}
+
+// =============================================
+// RENDER PRINCIPAL
+// =============================================
+function renderAll() {
+  renderResumen();
+  renderCabina();
+  renderTMK();
+  renderRotacion();
+  actualizarHeader();
+}
+
+function actualizarHeader() {
+  const meses = getMeses();
+  if(!meses.length) return;
+  const min = MESES_SHORT[meses[0]-1];
+  const max = MESES_SHORT[meses[meses.length-1]-1];
+  document.getElementById('header-rango').textContent = min + ' — ' + max + ' 2026';
+}
+
+// ---------- RESUMEN ----------
+function renderResumen() {
+  const meses = getMeses().filter(m => DB.cabina[m]);
+  const tc = DB.tc || 7.62;
+  document.getElementById('tc-label').textContent = 'Q'+tc.toFixed(2);
+
+  // KPI cards resumen
+  let lastCabStats = meses.length ? getCabinaStats(meses[meses.length-1]) : { total: 0, prom: 0, dias: 0 };
+  let prevCabStats = meses.length > 1 ? getCabinaStats(meses[meses.length-2]) : { total: 0, prom: 0, dias: 0 };
+  let lastMes = meses.length ? MESES_NOMBRES[meses[meses.length-1]-1] : '—';
+  
+  let totTMK = 0, totTMKPrev = 0;
+  const mTMK = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
+  if(mTMK.length) DB.tmk[mTMK[mTMK.length-1]].forEach(a => totTMK += a.d);
+  if(mTMK.length>1) DB.tmk[mTMK[mTMK.length-2]].forEach(a => totTMKPrev += a.d);
+
+  const difTMK = totTMK - totTMKPrev;
+  const pctTMK = totTMKPrev > 0 ? (difTMK / totTMKPrev * 100) : 0;
+  const difCab = lastCabStats.total - prevCabStats.total;
+
+  document.getElementById('kpi-resumen').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-label">Abandono Total — ${lastMes}</div>
+      <div><span class="kpi-value">${lastCabStats.total.toFixed(1)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow ${difCab > 0 ? 'arrow-up' : (difCab < 0 ? 'arrow-down' : 'arrow-neutral')}">
+        ${difCab > 0 ? '<i class="ti ti-arrow-up-right"></i>' : (difCab < 0 ? '<i class="ti ti-arrow-down-right"></i>' : '<i class="ti ti-minus"></i>')}
+        vs mes anterior: ${difCab > 0 ? '+' : ''}${difCab.toFixed(1)}pp
+      </div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Promedio Diario — ${lastMes}</div>
+      <div><span class="kpi-value">${lastCabStats.prom.toFixed(2)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-calendar"></i> ${lastCabStats.dias} días con abandono</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Comisión TMK — ${mTMK.length?MESES_NOMBRES[mTMK[mTMK.length-1]-1]:'—'}</div>
+      <div><span class="kpi-value">Q${(totTMK*tc).toFixed(0)}</span></div>
+      <div class="kpi-arrow ${difTMK>0?'arrow-up':difTMK<0?'arrow-down':'arrow-neutral'}">
+        ${difTMK>0?'<i class="ti ti-arrow-up"></i>':difTMK<0?'<i class="ti ti-arrow-down"></i>':'<i class="ti ti-minus"></i>'}
+        $${totTMK.toFixed(1)} USD ${difTMK!==0?'vs anterior: '+(difTMK>0?'+':'')+difTMK.toFixed(1) + ' ('+(pctTMK>0?'+':'')+pctTMK.toFixed(1)+'%)':''}
+      </div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Agentes TMK activos</div>
+      <div><span class="kpi-value">${AGENTES.length}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-users"></i> ${mTMK.length?DB.tmk[mTMK[mTMK.length-1]].filter(a=>a.q>0).length:0} con comisión</div>
+    </div>
+  `;
+
+  // Gráfica abandono promedio
+  const mCab = Object.keys(DB.cabina).map(Number).sort((a,b)=>a-b).filter(m => DB.cabina[m] && DB.cabina[m].length > 0);
+  makeChart('chartAbandonoProm', {
+    type:'line',
+    data:{
+      labels: mCab.map(m=>MESES_SHORT[m-1]),
+      datasets:[{ // Usar getCabinaStats para obtener el promedio
+        label:'Promedio %',
+        data: mCab.map(m=>getCabinaStats(m).prom),
+        borderColor: P.blue, backgroundColor:'rgba(59,130,246,0.15)',
+        fill:true, tension:0.4, pointRadius:6, pointBackgroundColor: P.blue
+      }]
+    },
+    options: chartOpts({ yCallback: v=>v+'%', tooltipCb: ctx=>ctx.parsed.y.toFixed(2)+'%' })
+  });
+
+  // Gráfica total acumulado
+  makeChart('chartAbandonoTot', {
+    type:'bar',
+    data:{
+      labels: mCab.map(m=>MESES_SHORT[m-1]),
+      datasets:[{ // Usar getCabinaStats para obtener el total
+        label:'Total %',
+        data: mCab.map(m=>getCabinaStats(m).total),
+        backgroundColor: mCab.map((_,i)=>[P.blue,P.green,P.purple,P.amber,P.teal,P.red][i%6]),
+        borderRadius:6
+      }]
+    },
+    options: chartOpts({ yCallback: v=>v+'%', tooltipCb: ctx=>ctx.parsed.y.toFixed(1)+'%' })
+  });
+
+  // TMK Total resumen chart
+  const mTmkTot = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
+  const totalsUSDRes = mTmkTot.map(m=>DB.tmk[m].reduce((s,a)=>s+a.d,0));
+  makeChart('chartTMKTotalRes', {
+    type:'bar',
+    data:{
+      labels: mTmkTot.map(m=>MESES_SHORT[m-1]),
+      datasets:[{
+        label:'Total USD',
+        data: totalsUSDRes,
+        backgroundColor: P.green,
+        borderRadius: 6
+      }]
+    },
+    options: chartOpts({ yCallback: v=>'$'+v, grace: '25%' }),
+    plugins: [{
+      id: 'growthLabelsRes',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, i) => {
+          if (i === 0) return;
+          const prevBar = meta.data[i-1];
+          const prevVal = totalsUSDRes[i-1];
+          if (prevVal === 0) return;
+          const diff = ((totalsUSDRes[i] - prevVal) / prevVal * 100).toFixed(1);
+          ctx.save();
+
+          // Etiqueta de valor $ sobre la barra (Resumen)
+          ctx.save();
+          ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+          ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 4;
+          ctx.fillText('$' + totalsUSDRes[i].toFixed(0), bar.x, bar.y - 8);
+          ctx.restore();
+
+          const isUp = diff > 0;
+          const color = isUp ? '#10b981' : (diff < 0 ? '#ef4444' : '#94a3b8');
+          ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+          
+          // Dibujar línea de tendencia "cabal" entre barras
+          ctx.beginPath();
+          ctx.moveTo(prevBar.x, prevBar.y - 5);
+          ctx.lineTo(bar.x, bar.y - 5);
+          ctx.stroke();
+
+          // Dibujar punta de la flecha inclinada
+          const angle = Math.atan2(bar.y - prevBar.y, bar.x - prevBar.x);
+          ctx.beginPath();
+          ctx.moveTo(bar.x, bar.y - 5);
+          ctx.lineTo(bar.x - 8 * Math.cos(angle - Math.PI/6), bar.y - 5 - 8 * Math.sin(angle - Math.PI/6));
+          ctx.lineTo(bar.x - 8 * Math.cos(angle + Math.PI/6), bar.y - 5 - 8 * Math.sin(angle + Math.PI/6));
+          ctx.fill();
+
+          // Texto de porcentaje
+          ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'center';
+          ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
+          const midX = (bar.x + prevBar.x) / 2;
+          const midY = (bar.y + prevBar.y) / 2;
+          if (diff !== "0.0") ctx.fillText(`${isUp?'+':''}${diff}%`, midX, midY - 8);
+          ctx.restore();
+        });
+      }
+    }]
+  });
+
+  // TMK resumen
+  const mTmk2 = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
+  makeChart('chartTMKRes', {
+    type:'bar',
+    data:{
+      labels: AGENTES.map(a=>a.short),
+      datasets: mTmk2.map((m,i)=>({
+        label: MESES_SHORT[m-1],
+        data: DB.tmk[m].map(a=>a.q),
+        backgroundColor: `rgba(${[
+          '59,130,246','16,185,129','139,92,246','245,158,11','20,184,166','239,68,68'
+        ][i%6]},0.75)`,
+        borderRadius:4
+      }))
+    },
+    options: chartOpts({ legend:true })
+  });
+
+  // Rotación resumen
+  const mRot = Object.keys(DB.rotacion).map(Number).sort((a,b)=>a-b);
+  makeChart('chartRotRes', {
+    type:'bar',
+    data:{
+      labels: mRot.map(m=>MESES_SHORT[m-1]),
+      datasets: DEPTOS.map((d,i)=>({
+        label:d,
+        data: mRot.map(m=>(DB.rotacion[m]||{})[d]||0),
+        backgroundColor: [`rgba(239,68,68,0.8)`,`rgba(59,130,246,0.8)`,`rgba(245,158,11,0.8)`][i],
+        borderRadius:4
+      }))
+    },
+    options: chartOpts({ legend:true, yCallback:v=>v+'%', max:12 })
+  });
+}
+
+// ---------- CABINA ----------
+function renderCabina() {
+  const meses = Object.keys(DB.cabina).map(Number).sort((a,b)=>a-b).filter(m => DB.cabina[m] && DB.cabina[m].length > 0);
+  if(!meses.length) { document.getElementById('kpi-cabina').innerHTML='<p style="color:#475569">Sin datos</p>'; return; }
+
+  const ultimoMes = meses[meses.length-1];
+  const ultimoStats = getCabinaStats(ultimoMes);
+
+  // Encontrar el mes con el mejor promedio y el peor total
+  let mejorMes = meses[0];
+  let peorMes = meses[0];
+  if (meses.length > 1) {
+    for (let i = 1; i < meses.length; i++) {
+      const currentMonth = meses[i];
+      const currentStats = getCabinaStats(currentMonth);
+      const mejorStats = getCabinaStats(mejorMes);
+      const peorStats = getCabinaStats(peorMes);
+
+      if (currentStats.prom < mejorStats.prom) {
+        mejorMes = currentMonth;
+      }
+      if (currentStats.total > peorStats.total) {
+        peorMes = currentMonth;
+      }
+    }
+  }
+  const mejorStats = getCabinaStats(mejorMes);
+  const peorStats = getCabinaStats(peorMes);
+
+  document.getElementById('kpi-cabina').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-label">Último mes — ${MESES_NOMBRES[ultimoMes-1]}</div>
+      <div><span class="kpi-value">${ultimoStats.total.toFixed(1)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-calendar"></i> Total abandono</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Mejor promedio</div>
+      <div><span class="kpi-value">${mejorStats.prom.toFixed(2)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-down"><i class="ti ti-award"></i> ${MESES_NOMBRES[mejorMes-1]}</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Mayor abandono total</div>
+      <div><span class="kpi-value">${peorStats.total.toFixed(1)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-up"><i class="ti ti-alert-triangle"></i> ${MESES_NOMBRES[peorMes-1]}</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Meses registrados</div>
+      <div><span class="kpi-value">${meses.length}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-calendar-stats"></i> ${MESES_SHORT[meses[0]-1]} a ${MESES_SHORT[meses[meses.length-1]-1]}</div>
+    </div>
+  `;
+
+  // Tabla tendencia
+  let tbody = '';
+  meses.forEach((m,i) => {
+    const d = getCabinaStats(m); // Usar getCabinaStats
+    const prev = i>0 ? getCabinaStats(meses[i-1]) : null; // Usar getCabinaStats
+    const diff = prev ? d.total - prev.total : null;
+    const up = diff > 0, down = diff < 0;
+    const trend = diff===null ? '—' : up
+      ? `<i class="ti ti-arrow-up" style="color:#ef4444"></i> +${diff.toFixed(1)}pp`
+      : down ? `<i class="ti ti-arrow-down" style="color:#10b981"></i> ${diff.toFixed(1)}pp`
+      : '<i class="ti ti-minus" style="color:#64748b"></i>';
+    const badge = diff===null ? `<span class="badge neutral">Base</span>`
+      : up ? `<span class="badge red">Aumentó</span>`
+      : `<span class="badge green">Mejoró</span>`;
+    tbody += `<tr>
+      <td><span class="month-pill" style="${pillColor(m)}">${MESES_NOMBRES[m-1]}</span></td>
+      <td style="font-weight:700;font-size:15px">${d.total.toFixed(1)}%</td>
+      <td>${d.prom.toFixed(2)}%</td>
+      <td>${trend}</td>
+      <td>${badge}</td>
+    </tr>`;
+  });
+  document.getElementById('cabinaTbody').innerHTML = tbody;
+
+  const totVals = meses.map(m => getCabinaStats(m).total);
+  const promVals = meses.map(m => getCabinaStats(m).prom);
+  const labels = meses.map(m => MESES_SHORT[m-1]);
+
+  // Gráfica de Total Abandono con tendencia
+  makeChart('chartCabinaTotBar', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.red, borderRadius: 6 }]
+    },
+    options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
+    plugins: [{
+      id: 'growthTotCab',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, i) => {
+          const curVal = totVals[i];
+          const prevVal = i > 0 ? totVals[i-1] : null;
+          const diff = (prevVal !== null && prevVal !== 0) ? ((curVal - prevVal) / prevVal * 100).toFixed(2) : null;
+          const isUp = diff !== null && parseFloat(diff) > 0;
+
+          // Etiqueta de valor % + tendencia % sobre la barra
+          ctx.save();
+          ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center'; ctx.fillStyle = '#475569';
+          let labelText = curVal.toFixed(2) + '%';
+          if (diff !== null) labelText += ` (${isUp ? '+' : ''}${diff}%)`;
+          ctx.fillText(labelText, bar.x, bar.y - 8);
+          ctx.restore();
+
+          if (i > 0 && prevVal !== 0) {
+            const prevBar = meta.data[i-1];
+            const color = isUp ? '#ef4444' : (parseFloat(diff) < 0 ? '#10b981' : '#94a3b8');
+            ctx.save();
+            ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+            const midX = (bar.x + prevBar.x) / 2;
+            const midY = (bar.y + prevBar.y) / 2;
+            const angle = Math.atan2(bar.y - prevBar.y, bar.x - prevBar.x);
+            ctx.beginPath(); ctx.moveTo(prevBar.x, prevBar.y); ctx.lineTo(bar.x, bar.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(midX, midY);
+            ctx.lineTo(midX - 8 * Math.cos(angle - Math.PI/6), midY - 8 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(midX - 8 * Math.cos(angle + Math.PI/6), midY - 8 * Math.sin(angle + Math.PI/6));
+            ctx.fill();
+            ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(255,255,255,0.8)'; ctx.shadowBlur = 6;
+            if (parseFloat(diff) !== 0) ctx.fillText(`${isUp ? '+' : ''}${diff}%`, midX, midY - 12);
+            ctx.restore();
+          }
+        });
+      }
+    }]
+  });
+
+  // Gráfica de Promedio Diario con tendencia
+  makeChart('chartCabinaPromBar', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.blue, borderRadius: 6 }]
+    },
+    options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
+    plugins: [{
+      id: 'growthPromCab',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, i) => {
+          const curVal = promVals[i];
+          const prevVal = i > 0 ? promVals[i-1] : null;
+          const diff = (prevVal !== null && prevVal !== 0) ? ((curVal - prevVal) / prevVal * 100).toFixed(2) : null;
+          const isUp = diff !== null && parseFloat(diff) > 0;
+
+          // Etiqueta de valor % + tendencia % sobre la barra
+          ctx.save();
+          ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center'; ctx.fillStyle = '#475569';
+          let labelText = curVal.toFixed(2) + '%';
+          if (diff !== null) labelText += ` (${isUp ? '+' : ''}${diff}%)`;
+          ctx.fillText(labelText, bar.x, bar.y - 8);
+          ctx.restore();
+
+          if (i > 0 && prevVal !== 0) {
+            const prevBar = meta.data[i-1];
+            const color = isUp ? '#ef4444' : (parseFloat(diff) < 0 ? '#10b981' : '#94a3b8');
+            ctx.save();
+            ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+            const midX = (bar.x + prevBar.x) / 2;
+            const midY = (bar.y + prevBar.y) / 2;
+            const angle = Math.atan2(bar.y - prevBar.y, bar.x - prevBar.x);
+            ctx.beginPath(); ctx.moveTo(prevBar.x, prevBar.y); ctx.lineTo(bar.x, bar.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(midX, midY);
+            ctx.lineTo(midX - 8 * Math.cos(angle - Math.PI/6), midY - 8 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(midX - 8 * Math.cos(angle + Math.PI/6), midY - 8 * Math.sin(angle + Math.PI/6));
+            ctx.fill();
+            ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(255,255,255,0.8)'; ctx.shadowBlur = 4;
+            if (parseFloat(diff) !== 0) ctx.fillText(`${isUp ? '+' : ''}${diff}%`, midX, midY - 12);
+            ctx.restore();
+          }
+        });
+      }
+    }]
+  });
+}
+
+// ---------- TMK ----------
+function renderTMK() {
+  const meses = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
+  const tc = DB.tc || 7.62;
+  if(!meses.length) { document.getElementById('kpi-tmk').innerHTML='<p style="color:#475569">Sin datos</p>'; return; }
+
+  const ultimo = meses[meses.length-1];
+  const prevM = meses.length>1 ? meses[meses.length-2] : null;
+  const totUlt = DB.tmk[ultimo].reduce((s,a)=>s+a.d,0);
+  const totPrev = prevM ? DB.tmk[prevM].reduce((s,a)=>s+a.d,0) : 0;
+  const difD = totUlt - totPrev;
+  const pctD = totPrev > 0 ? (difD / totPrev * 100) : 0;
+
+  // Chart TMK Total Evolution
+  const mTmkTotal = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
+  const totalsUSD = mTmkTotal.map(m => DB.tmk[m].reduce((s,a)=>s+a.d,0));
+  makeChart('chartTMKTotal', {
+    type:'bar',
+    data:{
+      labels: mTmkTotal.map(m=>MESES_SHORT[m-1]),
+      datasets:[{
+        label:'Total USD',
+        data: totalsUSD,
+        backgroundColor: P.green,
+        borderRadius: 8
+      }]
+    },
+    options: chartOpts({ 
+      yCallback: v=>'$'+v, 
+      grace: '45%', // Mantener un grace alto para las etiquetas
+      tooltipCb: ctx => {
+        const val = ctx.parsed.y;
+        const idx = ctx.dataIndex;
+        let growth = '';
+        if(idx > 0) {
+          const prevVal = totalsUSD[idx-1];
+          const g = ((val - prevVal) / prevVal * 100).toFixed(2);
+          growth = ` (${g > 0 ? '+' : ''}${g}%)`;
+        }
+        return `$${val.toFixed(2)}${growth}`;
+      }
+    }),
+    plugins: [{
+      id: 'growthLabelsDetailed',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, i) => {
+          if (i === 0) return;
+          const prevBar = meta.data[i-1];
+          const prevVal = totalsUSD[i-1];
+
+          // Etiqueta de valor $ sobre la barra
+          ctx.save();
+          ctx.font = 'bold 13px Segoe UI'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+          ctx.shadowColor = 'rgba(0,0,0,1)'; ctx.shadowBlur = 6;
+          ctx.fillText('$' + totalsUSD[i].toFixed(1), bar.x, bar.y - 12);
+          ctx.restore();
+
+          if (prevVal === 0) return;
+          const diff = ((totalsUSD[i] - prevVal) / prevVal * 100).toFixed(1);
+          ctx.save();
+          const isUp = diff > 0;
+          const color = isUp ? '#10b981' : (diff < 0 ? '#ef4444' : '#94a3b8');
+          ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 3; // Grosor de línea
+          
+          const midX = (bar.x + prevBar.x) / 2;
+          const midY = (bar.y + prevBar.y) / 2;
+          const angle = Math.atan2(bar.y - prevBar.y, bar.x - prevBar.x);
+
+          // Línea de conexión cabal entre topes
+          ctx.beginPath();
+          ctx.moveTo(prevBar.x, prevBar.y);
+          ctx.lineTo(bar.x, bar.y);
+          ctx.stroke();
+
+          // Punta de flecha inclinada en el medio del trayecto
+          ctx.beginPath();
+          ctx.moveTo(midX, midY);
+          ctx.lineTo(midX - 12 * Math.cos(angle - Math.PI/6), midY - 12 * Math.sin(angle - Math.PI/6));
+          ctx.lineTo(midX - 12 * Math.cos(angle + Math.PI/6), midY - 12 * Math.sin(angle + Math.PI/6));
+          ctx.fill();
+
+          // Etiqueta de porcentaje
+          ctx.font = 'bold 18px Segoe UI'; ctx.textAlign = 'center'; // Tamaño de fuente
+          ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 5; // Sombra para visibilidad
+          if (parseFloat(diff) !== 0) ctx.fillText(`${isUp?'+':''}${diff}%`, midX, midY - 15); // Posición del texto
+          ctx.restore();
+        });
+      }
+    }]
+  });
+
+  document.getElementById('kpi-tmk').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-label">Q Total — ${MESES_NOMBRES[ultimo-1]}</div>
+      <div><span class="kpi-value">${DB.tmk[ultimo].reduce((s,a)=>s+a.q,0).toFixed(0)}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-coin"></i> Unidades comisión</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">$ USD — ${MESES_NOMBRES[ultimo-1]}</div>
+      <div><span class="kpi-value">$${totUlt.toFixed(1)}</span></div>
+      <div class="kpi-arrow ${difD>0?'arrow-up':difD<0?'arrow-down':'arrow-neutral'}">
+        ${difD>0?'<i class="ti ti-arrow-up"></i>':difD<0?'<i class="ti ti-arrow-down"></i>':'<i class="ti ti-minus"></i>'}
+        ${prevM?'vs '+MESES_SHORT[prevM-1]+': '+(difD>0?'+':'')+difD.toFixed(1) + ' ('+(pctD>0?'+':'')+pctD.toFixed(1)+'%)' : '—'}
+      </div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Q GTQ — ${MESES_NOMBRES[ultimo-1]}</div>
+      <div><span class="kpi-value">Q${(totUlt*tc).toFixed(0)}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-currency-quetzal"></i> T/C Q${tc.toFixed(2)}</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Agentes activos</div>
+      <div><span class="kpi-value">${DB.tmk[ultimo].filter(a=>a.q>0).length}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-users"></i> con comisión</div>
+    </div>
+  `;
+
+  // Lista agentes
+  const colors = AGENTES.map(a=>a.color);
+  let html = '';
+  AGENTES.forEach((ag,i) => {
+    const vals = meses.map(m=>DB.tmk[m][i]);
+    const ult = vals[vals.length-1];
+    const prev2 = vals.length>1 ? vals[vals.length-2] : null;
+    const arrQ = prev2 ? (ult.q>prev2.q?'↑':ult.q<prev2.q?'↓':'→') : '—';
+    const colQ = prev2 ? (ult.q>prev2.q?'#10b981':ult.q<prev2.q?'#ef4444':'#64748b') : '#64748b';
+    const initials = ag.name.split(' ').map(n=>n[0]).slice(0,2).join('');
+    html += `<div class="person-row">
+      <div class="person-avatar" style="background:${colors[i]}22;color:${colors[i]}">${initials}</div>
+      <div class="person-info"><div class="person-name">${ag.name}</div><div class="person-dep">TMK</div></div>
+      <div class="person-stats">
+        ${meses.map((m,mi)=>{
+          const v = DB.tmk[m][i];
+          const vp = mi>0?DB.tmk[meses[mi-1]][i]:null;
+          const arr = vp?(v.q>vp.q?'↑':v.q<vp.q?'↓':'→'):'';
+          const col = vp?(v.q>vp.q?'#10b981':v.q<vp.q?'#ef4444':'#94a3b8'):'#94a3b8';
+          return `<div class="stat-item"><div class="stat-lbl">${MESES_SHORT[m-1]}</div><div class="stat-val" style="color:${col}">${arr} ${v.q}</div></div>`;
+        }).join('')}
+        <div class="stat-item"><div class="stat-lbl">$ Último</div><div class="stat-val" style="color:#c084fc">$${ult.d.toFixed(1)}</div></div>
+        <div class="stat-item"><div class="stat-lbl">Q GTQ</div><div class="stat-val" style="color:#fbbf24">Q${(ult.d*tc).toFixed(0)}</div></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('agentes-list').innerHTML = html;
+
+  // Gráficas
+  makeChart('chartTMKQ', {
+    type:'bar',
+    data:{
+      labels: AGENTES.map(a=>a.short),
+      datasets: meses.map((m,i)=>({
+        label:MESES_SHORT[m-1],
+        data:DB.tmk[m].map(a=>a.q),
+        backgroundColor:`rgba(${['59,130,246','16,185,129','139,92,246','245,158,11','20,184,166'][i%5]},0.75)`,
+        borderRadius:4
+      }))
+    },
+    options: chartOpts({ legend:true })
+  });
+
+  makeChart('chartTMKDollar', {
+    type:'bar',
+    data:{
+      labels: AGENTES.map(a=>a.short),
+      datasets: [
+        ...meses.map((m,i)=>({
+          label:'$ '+MESES_SHORT[m-1],
+          data:DB.tmk[m].map(a=>a.d.toFixed(2)),
+          backgroundColor:`rgba(${['59,130,246','16,185,129','139,92,246','245,158,11','20,184,166'][i%5]},0.75)`,
+          borderRadius:4
+        })),
+        { label:'Q GTQ Último', data:DB.tmk[ultimo].map(a=>(a.d*tc).toFixed(2)), backgroundColor:'rgba(251,191,36,0.6)', borderRadius:4, borderWidth:2, borderColor:'rgba(251,191,36,0.9)' }
+      ]
+    },
+    options: chartOpts({ legend:true, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD' })
+  });
+
+  // Tabla tendencia TMK
+  let thead = '<th>Agente</th>' + meses.map(m=>`<th>Q ${MESES_SHORT[m-1]}</th>`).join('') +
+    meses.map(m=>`<th>$ ${MESES_SHORT[m-1]} / Q GTQ</th>`).join('') + '<th>Tendencia</th>';
+  document.getElementById('tmkThead').innerHTML = thead;
+
+  let tbody = '';
+  AGENTES.forEach((ag,i) => {
+    const qVals = meses.map(m=>DB.tmk[m][i].q);
+    const dVals = meses.map(m=>DB.tmk[m][i].d);
+    const last = qVals[qVals.length-1];
+    const prev = qVals.length>1?qVals[qVals.length-2]:null;
+    const tendencia = prev!==null ? arrow(last,prev) : '—';
+    tbody += `<tr>
+      <td style="font-weight:600;color:#e2e8f0">${ag.name}</td>
+      ${qVals.map((q,qi)=>{
+        const p = qi>0?qVals[qi-1]:null;
+        const c = p!==null?(q>p?'#10b981':q<p?'#ef4444':'#94a3b8'):'#94a3b8';
+        return `<td style="color:${c};font-weight:600">${q}</td>`;
+      }).join('')}
+      ${dVals.map(d=>`<td style="color:#60a5fa">$${d.toFixed(2)}<br><span style="color:#fbbf24;font-size:11px">Q${(d*tc).toFixed(2)}</span></td>`).join('')}
+      <td>${tendencia}</td>
+    </tr>`;
+  });
+  document.getElementById('tmkTbody').innerHTML = tbody;
+}
+
+// ---------- ROTACION ----------
+function renderRotacion() {
+  const meses = Object.keys(DB.rotacion).map(Number).sort((a,b)=>a-b);
+  if(!meses.length) return;
+
+  // KPIs
+  let pico = {dep:'—',mes:0,val:0};
+  meses.forEach(m=>{
+    DEPTOS.forEach(d=>{
+      const v=(DB.rotacion[m]||{})[d]||0;
+      if(v>pico.val) pico={dep:d,mes:m,val:v};
+    });
+  });
+  const sinRot = meses.filter(m=>DEPTOS.every(d=>((DB.rotacion[m]||{})[d]||0)===0)).length;
+
+  document.getElementById('kpi-rot').innerHTML = `
+    <div class="kpi-card red">
+      <div class="kpi-label">Pico de rotación</div>
+      <div><span class="kpi-value">${pico.val.toFixed(1)}</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-alert-triangle"></i> ${pico.dep} — ${pico.mes?MESES_NOMBRES[pico.mes-1]:'—'}</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">TMK — Todo el período</div>
+      <div><span class="kpi-value">0.0</span><span class="kpi-unit">%</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-circle-check"></i> Sin rotación</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Meses sin rotación</div>
+      <div><span class="kpi-value">${sinRot}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-calendar"></i> de ${meses.length} registrados</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Departamentos monitoreados</div>
+      <div><span class="kpi-value">${DEPTOS.length}</span></div>
+      <div class="kpi-arrow arrow-neutral"><i class="ti ti-building"></i> Ops · TMK · Admon</div>
+    </div>
+  `;
+
+  const rotTotals = meses.map(m => DEPTOS.reduce((s, d) => s + ((DB.rotacion[m] || {})[d] || 0), 0));
+  makeChart('chartRot', {
+    type: 'bar',
+    data: {
+      labels: meses.map(m => MESES_SHORT[m-1]),
+      datasets: [{
+        label: 'Total Rotación %',
+        data: rotTotals,
+        backgroundColor: P.red,
+        borderRadius: 6
+      }]
+    },
+    options: chartOpts({ legend: true, yCallback: v => v + '%', grace: '35%' }),
+    plugins: [{
+      id: 'growthRot',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, i) => {
+          // Etiqueta de valor sobre la barra
+          const curVal = rotTotals[i];
+          const prevVal = i > 0 ? rotTotals[i-1] : null;
+          const diff = (prevVal !== null && prevVal !== 0) ? ((curVal - prevVal) / prevVal * 100).toFixed(1) : null;
+          const isUp = diff !== null && parseFloat(diff) > 0;
+
+          // Etiqueta de valor % + tendencia % sobre la barra
+          ctx.save();
+          ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center'; ctx.fillStyle = '#475569';
+          let labelText = curVal.toFixed(1) + '%';
+          if (diff !== null) labelText += ` (${isUp ? '+' : ''}${diff}%)`;
+          ctx.fillText(labelText, bar.x, bar.y - 8);
+          ctx.restore();
+
+          if (i > 0 && prevVal !== 0) {
+            const prevBar = meta.data[i-1];
+            const color = isUp ? '#ef4444' : (parseFloat(diff) < 0 ? '#10b981' : '#94a3b8');
+            ctx.save();
+            ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+            const midX = (bar.x + prevBar.x) / 2;
+            const midY = (bar.y + prevBar.y) / 2;
+            const angle = Math.atan2(bar.y - prevBar.y, bar.x - prevBar.x);
+            ctx.beginPath(); ctx.moveTo(prevBar.x, prevBar.y); ctx.lineTo(bar.x, bar.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(midX, midY);
+            ctx.lineTo(midX - 8 * Math.cos(angle - Math.PI/6), midY - 8 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(midX - 8 * Math.cos(angle + Math.PI/6), midY - 8 * Math.sin(angle + Math.PI/6));
+            ctx.fill();
+            ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(255,255,255,0.8)'; ctx.shadowBlur = 4;
+            if (parseFloat(diff) !== 0) ctx.fillText(`${isUp ? '+' : ''}${diff}%`, midX, midY - 15);
+            ctx.restore();
+          }
+        });
+      }
+    }]
+  });
+
+  // Tabla rotación
+  let thead = '<th>Departamento</th>' + meses.map(m=>`<th>${MESES_SHORT[m-1]}</th><th>Tendencia</th>`).join('');
+  document.getElementById('rotThead').innerHTML = thead;
+  let tbody = '';
+  DEPTOS.forEach(dep=>{
+    tbody += `<tr><td style="font-weight:600;color:#e2e8f0">${dep}</td>`;
+    meses.forEach((m,i)=>{
+      const v=(DB.rotacion[m]||{})[dep]||0;
+      const prev=i>0?(DB.rotacion[meses[i-1]]||{})[dep]||0:null;
+      const col=v>0?'#f87171':'#94a3b8';
+      const trend=prev!==null?arrow(v,prev):'—';
+      tbody+=`<td style="color:${col};font-weight:${v>0?700:400}">${v.toFixed(1)}%</td><td>${trend}</td>`;
+    });
+    tbody+='</tr>';
+  });
+  document.getElementById('rotTbody').innerHTML = tbody;
+}
+
+// =============================================
+// ADMIN PANEL
+// =============================================
+function buildAdmin() {
+  // Chips de meses
+  const todosLosMeses = Array.from({length:12},(_,i)=>i+1);
+  const mesesConDatos = new Set([
+    ...Object.keys(DB.cabina).map(Number),
+    ...Object.keys(DB.tmk).map(Number),
+    ...Object.keys(DB.rotacion).map(Number),
+  ]);
+  let chipsHTML = todosLosMeses.map(m=>{
+    const tieneData = mesesConDatos.has(m);
+    const activo = m===mesSeleccionado;
+    return `<div class="mes-chip ${activo?'active':tieneData?'has-data':''}" onclick="seleccionarMes(${m})">${MESES_NOMBRES[m-1]}${tieneData?' ✓':''}</div>`;
+  }).join('');
+  document.getElementById('meses-nav').innerHTML = chipsHTML;
+
+  // Cabina - Inputs diarios
+  const anio = parseInt(document.getElementById('input-anio').value) || 2026;
+  const numDias = new Date(anio, mesSeleccionado, 0).getDate();
+  
+  let dailyInputsHtml = '<div class="form-grid" style="grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));">';
+  
+  const cabinaMesData = DB.cabina[mesSeleccionado] || [];
+  const dataMap = {};
+  if (Array.isArray(cabinaMesData)) {
+    cabinaMesData.forEach(d => dataMap[d.day] = d.val);
+  }
+
+  for (let d = 1; d <= numDias; d++) {
+    const val = dataMap[d] !== undefined ? dataMap[d] : '';
+    const dateStr = `${d.toString().padStart(2, '0')}/${mesSeleccionado.toString().padStart(2, '0')}`;
+    dailyInputsHtml += `
+      <div class="form-group">
+        <label class="form-label">${dateStr} <span style="color:var(--amber)">%</span></label>
+        <div style="position:relative">
+          <input type="number" class="form-input cab-daily-val" data-day="${d}" value="${val}" placeholder="0.00" step="0.01">
+        </div>
+      </div>`;
+  }
+  dailyInputsHtml += '</div>';
+  document.getElementById('cab-daily-inputs').innerHTML = dailyInputsHtml;
+
+  document.getElementById('input-tc').value = DB.tc || 7.62;
+
+  // Formulario TMK agentes
+  let tmkHTML = '';
+  const tmkMes = DB.tmk[mesSeleccionado] || AGENTES.map(()=>({q:0,d:0}));
+  AGENTES.forEach((ag,i)=>{
+    const v = tmkMes[i] || {q:0,d:0};
+    tmkHTML += `<div class="agente-form-card">
+      <div class="agente-nombre"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${ag.color};margin-right:6px"></span>${ag.name}</div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label class="form-label">Q Comisiones</label>
+          <input type="number" class="form-input" id="tmk-q-${i}" value="${v.q||''}" placeholder="0" step="0.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">$ USD Comisión</label>
+          <input type="number" class="form-input" id="tmk-d-${i}" value="${v.d||''}" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('tmk-agentes-form').innerHTML = tmkHTML;
+
+  // Formulario rotación
+  let rotHTML = '';
+  const rotMes = DB.rotacion[mesSeleccionado] || {};
+  DEPTOS.forEach(dep=>{
+    rotHTML += `<div class="form-group">
+      <label class="form-label">${dep} (%)</label>
+      <input type="number" class="form-input" id="rot-${dep.replace('/','_')}" value="${rotMes[dep]!==undefined?rotMes[dep]:''}" placeholder="0.00" step="0.01">
+    </div>`;
+  });
+  document.getElementById('rot-form').innerHTML = rotHTML;
+
+  // Historial
+  renderHistorial();
+}
+
+function seleccionarMes(m) {
+  mesSeleccionado = m;
+  buildAdmin();
+}
+
+function guardarMes() {
+  const m = mesSeleccionado;
+  const tc = parseFloat(document.getElementById('input-tc').value) || 7.62;
+  DB.tc = tc;
+
+  // Cabina
+  const dailyCabinaData = [];
+  document.querySelectorAll('#cab-daily-inputs .cab-daily-val').forEach(input => {
+    const day = parseInt(input.dataset.day);
+    const val = parseFloat(input.value);
+    if (!isNaN(val)) {
+      dailyCabinaData.push({ day, val });
+    }
+  });
+  DB.cabina[m] = dailyCabinaData.sort((a, b) => a.day - b.day); // Almacenar datos diarios ordenados
+
+  // TMK
+  const tmkVals = AGENTES.map((_,i)=>({
+    q: parseFloat(document.getElementById('tmk-q-'+i).value)||0,
+    d: parseFloat(document.getElementById('tmk-d-'+i).value)||0,
+  }));
+  if(tmkVals.some(v=>v.q>0||v.d>0)) DB.tmk[m] = tmkVals;
+
+  // Rotación
+  const rotVals = {};
+  DEPTOS.forEach(dep=>{
+    const v = parseFloat(document.getElementById('rot-'+dep.replace('/','_')).value);
+    rotVals[dep] = isNaN(v)?0:v;
+  });
+  DB.rotacion[m] = rotVals;
+
+  guardarDatos(DB);
+  renderAll();
+
+  const alert = document.getElementById('alert-ok');
+  alert.classList.add('show');
+  setTimeout(()=>alert.classList.remove('show'), 3000);
+
+  buildAdmin();
+}
+
+function renderHistorial() {
+  const meses = getMeses();
+  if(!meses.length) { document.getElementById('historial-list').innerHTML='<p style="color:#475569;font-size:13px">Sin datos aún.</p>'; return; }
+  const tc = DB.tc||7.62;
+  let html = '';
+  meses.forEach(m=>{
+    const cabStats = getCabinaStats(m); // Usar la función auxiliar
+    const tmkTot = DB.tmk[m]?DB.tmk[m].reduce((s,a)=>s+a.d,0):null;
+    html += `<div class="historial-item">
+      <span class="historial-mes">${MESES_NOMBRES[m-1]}</span>
+      <span class="historial-vals"> <!-- Mostrar los stats calculados -->
+        ${DB.cabina[m] && DB.cabina[m].length > 0 ? `Abandono: ${cabStats.total.toFixed(1)}%  Prom: ${cabStats.prom.toFixed(2)}%` : 'Sin cabina'}
+        ${tmkTot!==null?` · TMK: $${tmkTot.toFixed(1)} / Q${(tmkTot*tc).toFixed(0)}`:''}
+      </span>
+      <span class="historial-delete" onclick="borrarMes(${m})" title="Borrar mes"><i class="ti ti-trash"></i></span>
+    </div>`;
+  });
+  document.getElementById('historial-list').innerHTML = html;
+}
+
+function borrarMes(m) {
+  if(!confirm('¿Borrar datos de '+MESES_NOMBRES[m-1]+'?')) return;
+  delete DB.cabina[m];
+  delete DB.tmk[m];
+  delete DB.rotacion[m];
+  guardarDatos(DB);
+  renderAll();
+  buildAdmin();
+}
+
+function limpiarTodo() {
+  DB = JSON.parse(JSON.stringify(DATOS_INICIALES));
+  guardarDatos(DB);
+  renderAll();
+  buildAdmin();
+}
+
+function exportarJSON() {
+  const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'datos_GEA.json';
+  a.click();
+}
+
+// =============================================
+// CHART OPTIONS HELPER
+// =============================================
+function chartOpts({ yCallback, tooltipCb, legend=false, max, grace } = {}) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{ display:legend, labels:{color:P.text,font:{size:11}} },
+      tooltip:{ callbacks:{ label: tooltipCb || (ctx=>ctx.parsed.y) } }
+    },
+    scales:{
+      x:{ grid:{color:P.grid}, ticks:{color:P.text,font:{size:11}} },
+      y:{ grid:{color:P.grid}, ticks:{color:P.text, callback: yCallback||(v=>v)}, ...(max?{max}:{}), ...(grace?{grace}:{}) }
+    }
+  };
+}
+
+// =============================================
+// INIT
+// =============================================
+renderAll();
+</script>
+</body>
+</html>
