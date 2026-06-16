@@ -722,7 +722,7 @@ function renderResumen() {
       datasets:[{ // Usar getCabinaStats para obtener el total
         label:'Total %',
         data: mCab.map(m=>getCabinaStats(m).total),
-        backgroundColor: mCab.map((_,i)=>[P.blue,P.green,P.purple,P.amber,P.teal,P.red][i%6]),
+        backgroundColor: P.green,
         borderRadius:6
       }]
     },
@@ -822,6 +822,7 @@ function renderResumen() {
         label:d,
         data: mRot.map(m=>(DB.rotacion[m]||{})[d]||0),
         backgroundColor: [`rgba(239,68,68,0.8)`,`rgba(59,130,246,0.8)`,`rgba(245,158,11,0.8)`][i],
+        backgroundColor: [`rgba(37,99,235,0.8)`,`rgba(59,130,246,0.6)`,`rgba(96,165,250,0.4)`][i],
         borderRadius:4
       }))
     },
@@ -914,7 +915,7 @@ function renderCabina() {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.red, borderRadius: 6 }]
+      datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.green, borderRadius: 6 }]
     },
     options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
@@ -1262,6 +1263,7 @@ function renderRotacion() {
         label: 'Total Rotación %',
         data: rotTotals,
         backgroundColor: P.red,
+        backgroundColor: P.blue,
         borderRadius: 6
       }]
     },
