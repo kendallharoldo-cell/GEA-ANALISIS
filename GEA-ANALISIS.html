@@ -803,9 +803,7 @@ function renderResumen() {
       datasets: mTmk2.map((m,i)=>({
         label: MESES_SHORT[m-1],
         data: DB.tmk[m].map(a=>a.q),
-        backgroundColor: `rgba(${[
-          '59,130,246','16,185,129','139,92,246','245,158,11','20,184,166','239,68,68'
-        ][i%6]},0.75)`,
+        backgroundColor: P.green,
         borderRadius:4
       }))
     },
@@ -821,8 +819,7 @@ function renderResumen() {
       datasets: DEPTOS.map((d,i)=>({
         label:d,
         data: mRot.map(m=>(DB.rotacion[m]||{})[d]||0),
-        backgroundColor: [`rgba(239,68,68,0.8)`,`rgba(59,130,246,0.8)`,`rgba(245,158,11,0.8)`][i],
-        backgroundColor: [`rgba(37,99,235,0.8)`,`rgba(59,130,246,0.6)`,`rgba(96,165,250,0.4)`][i],
+        backgroundColor: P.green,
         borderRadius:4
       }))
     },
@@ -965,7 +962,7 @@ function renderCabina() {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.blue, borderRadius: 6 }]
+      datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.green, borderRadius: 6 }]
     },
     options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
@@ -1166,7 +1163,7 @@ function renderTMK() {
       datasets: meses.map((m,i)=>({
         label:MESES_SHORT[m-1],
         data:DB.tmk[m].map(a=>a.q),
-        backgroundColor:`rgba(${['59,130,246','16,185,129','139,92,246','245,158,11','20,184,166'][i%5]},0.75)`,
+        backgroundColor: P.green,
         borderRadius:4
       }))
     },
@@ -1181,10 +1178,10 @@ function renderTMK() {
         ...meses.map((m,i)=>({
           label:'$ '+MESES_SHORT[m-1],
           data:DB.tmk[m].map(a=>a.d.toFixed(2)),
-          backgroundColor:`rgba(${['59,130,246','16,185,129','139,92,246','245,158,11','20,184,166'][i%5]},0.75)`,
+          backgroundColor: P.green,
           borderRadius:4
         })),
-        { label:'Q GTQ Último', data:DB.tmk[ultimo].map(a=>(a.d*tc).toFixed(2)), backgroundColor:'rgba(251,191,36,0.6)', borderRadius:4, borderWidth:2, borderColor:'rgba(251,191,36,0.9)' }
+        { label:'Q GTQ Último', data:DB.tmk[ultimo].map(a=>(a.d*tc).toFixed(2)), backgroundColor: P.green, borderRadius:4, borderWidth:2, borderColor: P.green }
       ]
     },
     options: chartOpts({ legend:true, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD' })
@@ -1262,8 +1259,7 @@ function renderRotacion() {
       datasets: [{
         label: 'Total Rotación %',
         data: rotTotals,
-        backgroundColor: P.red,
-        backgroundColor: P.blue,
+        backgroundColor: P.green,
         borderRadius: 6
       }]
     },
@@ -1514,6 +1510,10 @@ function exportarJSON() {
 function chartOpts({ yCallback, tooltipCb, legend=false, max, grace } = {}) {
   return {
     responsive:true, maintainAspectRatio:false,
+    barPercentage: 0.5,
+    categoryPercentage: 0.8,
+    barPercentage: 0.3,
+    categoryPercentage: 0.6,
     plugins:{
       legend:{ display:legend, labels:{color:P.text,font:{size:11}} },
       tooltip:{ callbacks:{ label: tooltipCb || (ctx=>ctx.parsed.y) } }
