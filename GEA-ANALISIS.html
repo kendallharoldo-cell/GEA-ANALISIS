@@ -6,6 +6,47 @@
 <title>Dashboard GEA - Análisis General</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB0EAxqbcWn-1tmpBPRFFXkXNR5RUxvQm0",
+    authDomain: "gea-analisis.firebaseapp.com",
+    projectId: "gea-analisis",
+    storageBucket: "gea-analisis.firebasestorage.app",
+    messagingSenderId: "572249513571",
+    appId: "1:572249513571:web:cd5175d3faf4e6f5b8a256",
+    measurementId: "G-2PEB132VZF"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Exponer funciones Firebase globalmente
+  window._fbSave = async function(data) {
+    try {
+      await setDoc(doc(db, "gea", "datos"), data);
+    } catch(e) {
+      console.error("Error guardando en Firebase:", e);
+    }
+  };
+
+  window._fbLoad = async function() {
+    try {
+      const snap = await getDoc(doc(db, "gea", "datos"));
+      return snap.exists() ? snap.data() : null;
+    } catch(e) {
+      console.error("Error cargando desde Firebase:", e);
+      return null;
+    }
+  };
+
+  // Iniciar la app una vez que Firebase esté listo
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #1e293b; min-height: 100vh; }
@@ -177,6 +218,20 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #
   font-size: 11px; color: #fbbf24; margin-left: 8px;
 }
 
+/* Loading overlay */
+#loading-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+}
+.loading-spinner {
+  width: 44px; height: 44px; border: 4px solid #334155;
+  border-top-color: #3b82f6; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-text { color: #94a3b8; font-size: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 @media (max-width: 768px) {
   .chart-grid { grid-template-columns: 1fr; }
   .main { padding: 16px; }
@@ -186,6 +241,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #
 </style>
 </head>
 <body>
+
+<!-- Overlay de carga Firebase -->
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Conectando con Firebase...</div>
+</div>
 
 <div class="header">
   <div class="header-left">
@@ -451,19 +512,38 @@ const DATOS_INICIALES = {
   }
 };
 
-// Cargar desde localStorage o usar datos iniciales
-function cargarDatos() {
+// =============================================
+// FIREBASE — cargar y guardar datos
+// =============================================
+async function cargarDatos() {
+  // Intentar cargar desde Firebase
+  if (window._fbLoad) {
+    const data = await window._fbLoad();
+    if (data) return data;
+  }
+  // Fallback a localStorage si Firebase no responde
   try {
     const s = localStorage.getItem('gea_datos');
     return s ? JSON.parse(s) : JSON.parse(JSON.stringify(DATOS_INICIALES));
   } catch(e) { return JSON.parse(JSON.stringify(DATOS_INICIALES)); }
 }
-function guardarDatos(d) {
+
+async function guardarDatos(d) {
+  // Guardar en Firebase
+  if (window._fbSave) {
+    await window._fbSave(d);
+  }
+  // También guardar en localStorage como respaldo
   try { localStorage.setItem('gea_datos', JSON.stringify(d)); } catch(e) {}
 }
 
-let DB = cargarDatos();
+let DB = JSON.parse(JSON.stringify(DATOS_INICIALES));
 let mesSeleccionado = 6; // Junio por defecto al abrir admin (mes nuevo)
+
+// Función para mostrar/ocultar pantalla de carga
+function mostrarCarga(visible) {
+  document.getElementById('loading-overlay').style.display = visible ? 'flex' : 'none';
+}
 
 // =============================================
 // PALETA
@@ -1334,7 +1414,7 @@ function seleccionarMes(m) {
   buildAdmin();
 }
 
-function guardarMes() {
+async function guardarMes() {
   const m = mesSeleccionado;
   const tc = parseFloat(document.getElementById('input-tc').value) || 7.62;
   DB.tc = tc;
@@ -1365,7 +1445,9 @@ function guardarMes() {
   });
   DB.rotacion[m] = rotVals;
 
-  guardarDatos(DB);
+  mostrarCarga(true);
+  await guardarDatos(DB);
+  mostrarCarga(false);
   renderAll();
 
   const alert = document.getElementById('alert-ok');
@@ -1395,19 +1477,23 @@ function renderHistorial() {
   document.getElementById('historial-list').innerHTML = html;
 }
 
-function borrarMes(m) {
+async function borrarMes(m) {
   if(!confirm('¿Borrar datos de '+MESES_NOMBRES[m-1]+'?')) return;
   delete DB.cabina[m];
   delete DB.tmk[m];
   delete DB.rotacion[m];
-  guardarDatos(DB);
+  mostrarCarga(true);
+  await guardarDatos(DB);
+  mostrarCarga(false);
   renderAll();
   buildAdmin();
 }
 
-function limpiarTodo() {
+async function limpiarTodo() {
   DB = JSON.parse(JSON.stringify(DATOS_INICIALES));
-  guardarDatos(DB);
+  mostrarCarga(true);
+  await guardarDatos(DB);
+  mostrarCarga(false);
   renderAll();
   buildAdmin();
 }
@@ -1438,9 +1524,30 @@ function chartOpts({ yCallback, tooltipCb, legend=false, max, grace } = {}) {
 }
 
 // =============================================
-// INIT
+// INIT — esperar a Firebase antes de renderizar
 // =============================================
-renderAll();
+async function iniciarApp() {
+  mostrarCarga(true);
+  DB = await cargarDatos();
+  mostrarCarga(false);
+  renderAll();
+}
+
+// Esperar a que Firebase esté listo o iniciar directamente si ya lo está
+if (window._firebaseReady) {
+  iniciarApp();
+} else {
+  window.addEventListener('firebaseReady', iniciarApp);
+  // Si Firebase tarda más de 4 segundos, iniciar con datos locales
+  setTimeout(() => {
+    if (!window._firebaseReady) {
+      console.warn('Firebase tardó demasiado, usando datos locales.');
+      DB = JSON.parse(localStorage.getItem('gea_datos') || JSON.stringify(DATOS_INICIALES));
+      mostrarCarga(false);
+      renderAll();
+    }
+  }, 4000);
+}
 </script>
 </body>
 </html>
