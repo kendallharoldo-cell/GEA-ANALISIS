@@ -581,6 +581,11 @@ function syncChartRangeButtons() {
   });
 }
 
+function getChartSpacing(section, months) {
+  const compact = chartRangeModes[section] && Array.isArray(months) && months.length <= 2;
+  return compact ? { barPct: 0.95, catPct: 0.98, barThickness: 6 } : {};
+}
+
 function toggleChartRange(section) {
   chartRangeModes[section] = !chartRangeModes[section];
   if (section === 'resumen') renderResumen();
@@ -767,7 +772,7 @@ function renderResumen() {
         borderRadius:6
       }]
     },
-    options: chartOpts({ yCallback: v=>v+'%', tooltipCb: ctx=>ctx.parsed.y.toFixed(1)+'%' })
+    options: chartOpts({ ...getChartSpacing('resumen', mCabVisible), yCallback: v=>v+'%', tooltipCb: ctx=>ctx.parsed.y.toFixed(1)+'%' })
   });
  
   // TMK Total resumen chart
@@ -787,7 +792,7 @@ function renderResumen() {
         borderRadius: 6
       }]
     },
-    options: chartOpts({ yCallback: v=>'$'+v, grace: '25%' }),
+    options: chartOpts({ ...getChartSpacing('resumen', mTmkTotVisible), yCallback: v=>'$'+v, grace: '25%' }),
     plugins: [{
       id: 'growthLabelsRes',
       afterDraw(chart) {
@@ -850,7 +855,7 @@ function renderResumen() {
         borderRadius:4
       }))
     },
-    options: chartOpts({ legend:true })
+    options: chartOpts({ ...getChartSpacing('resumen', mTmk2Visible), legend:true })
   });
  
   // Rotación resumen
@@ -869,7 +874,7 @@ function renderResumen() {
         borderRadius:4
       }))
     },
-    options: chartOpts({ legend:true, yCallback:v=>v+'%', max:12, barPct: 0.55, catPct: 0.8 })
+    options: chartOpts({ ...getChartSpacing('resumen', mRotVisible), legend:true, yCallback:v=>v+'%', max:12 })
   });
 }
  
@@ -961,7 +966,7 @@ function renderCabina() {
       labels,
       datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth:1, borderRadius: 6 }]
     },
-    options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
+    options: chartOpts({ ...getChartSpacing('cabina', visibleMeses), yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
       id: 'growthTotCab',
       afterDraw(chart) {
@@ -1014,7 +1019,7 @@ function renderCabina() {
       labels,
       datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth:1, borderRadius: 6 }]
     },
-    options: chartOpts({ yCallback: v => v + '%', grace: '35%' }),
+    options: chartOpts({ ...getChartSpacing('cabina', visibleMeses), yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
       id: 'growthPromCab',
       afterDraw(chart) {
@@ -1091,10 +1096,7 @@ function renderTMK() {
         borderRadius: 6
       }]
     },
-    options: chartOpts({ 
-      yCallback: v=>'$'+v, 
-      grace: '45%', 
-      barPct: 0.55, catPct: 0.8,
+    options: chartOpts({ ...getChartSpacing('tmk', mTmkTotalVisible), yCallback: v=>'$'+v, grace: '45%' ,
       tooltipCb: ctx => {
         const val = ctx.parsed.y;
         const idx = ctx.dataIndex;
@@ -1221,7 +1223,7 @@ function renderTMK() {
         borderRadius:4
       }))
     },
-    options: chartOpts({ legend:true, barPct:0.55, catPct:0.8 })
+    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true })
   });
  
   makeChart('chartTMKDollar', {
@@ -1240,7 +1242,7 @@ function renderTMK() {
         { label:'Q GTQ Último', data:DB.tmk[ultimo].map(a=>(a.d*tc).toFixed(2)), backgroundColor: P.blue, borderRadius:4, borderWidth:2, borderColor: P.blue }
       ]
     },
-    options: chartOpts({ legend:true, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD', barPct:0.55, catPct:0.8 })
+    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD' })
   });
  
   // Tabla tendencia TMK
@@ -1322,7 +1324,7 @@ function renderRotacion() {
         borderRadius: 6
       }]
     },
-    options: chartOpts({ legend: true, yCallback: v => v + '%', grace: '35%', barPct: 0.55, catPct: 0.8 }),
+    options: chartOpts({ ...getChartSpacing('rotacion', visibleMesesRot), legend: true, yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
       id: 'growthRot',
       afterDraw(chart) {
@@ -1569,14 +1571,14 @@ function exportarJSON() {
 // =============================================
 // CHART OPTIONS HELPER
 // =============================================
-function chartOpts({ yCallback, tooltipCb, legend=false, max, grace, barPct=0.55, catPct=0.8 } = {}) {
+function chartOpts({ yCallback, tooltipCb, legend=false, max, grace, barPct=0.25, catPct=0.95, barThickness=8 } = {}) {
   return {
     responsive:true, maintainAspectRatio:false,
     interaction:{ mode:'index', intersect:false },
     layout:{ padding:{top:10,bottom:6,left:0,right:0} },
     barPercentage: barPct,
     categoryPercentage: catPct,
-    elements:{ bar:{ borderRadius:6, borderSkipped:false } },
+    elements:{ bar:{ borderRadius:6, borderSkipped:false, ...(barThickness ? { barThickness } : {}) } },
     plugins:{
       legend:{ display:legend, position:'bottom', labels:{color:P.text,font:{size:11},usePointStyle:true,padding:10} },
       tooltip:{
