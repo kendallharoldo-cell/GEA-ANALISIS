@@ -582,8 +582,12 @@ function syncChartRangeButtons() {
 }
 
 function getChartSpacing(section, months) {
-  const compact = chartRangeModes[section] && Array.isArray(months) && months.length <= 2;
-  return compact ? { barPct: 0.95, catPct: 0.98, barThickness: 6 } : {};
+  return {
+    barPct: 1,
+    catPct: 0.6,
+    barThickness: 48,
+    maxBarThickness: 48
+  };
 }
 
 function toggleChartRange(section) {
@@ -768,7 +772,7 @@ function renderResumen() {
         data: mCabVisible.map(m=>getCabinaStats(m).total),
         backgroundColor: P.blue,
         borderColor: P.blue,
-        borderWidth: 1,
+        borderWidth: 2,
         borderRadius:6
       }]
     },
@@ -964,7 +968,7 @@ function renderCabina() {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth:1, borderRadius: 6 }]
+      datasets: [{ label: 'Total %', data: totVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth: 2, borderRadius: 6 }]
     },
     options: chartOpts({ ...getChartSpacing('cabina', visibleMeses), yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
@@ -1017,7 +1021,7 @@ function renderCabina() {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth:1, borderRadius: 6 }]
+      datasets: [{ label: 'Promedio %', data: promVals, backgroundColor: P.blue, borderColor: P.blue, borderWidth: 2, borderRadius: 6 }]
     },
     options: chartOpts({ ...getChartSpacing('cabina', visibleMeses), yCallback: v => v + '%', grace: '35%' }),
     plugins: [{
@@ -1092,7 +1096,7 @@ function renderTMK() {
         data: totalsUSD,
         backgroundColor: P.blue,
         borderColor: P.blue,
-        borderWidth:1,
+        borderWidth: 2,
         borderRadius: 6
       }]
     },
@@ -1571,14 +1575,20 @@ function exportarJSON() {
 // =============================================
 // CHART OPTIONS HELPER
 // =============================================
-function chartOpts({ yCallback, tooltipCb, legend=false, max, grace, barPct=0.25, catPct=0.95, barThickness=8 } = {}) {
+function chartOpts({ yCallback, tooltipCb, legend=false, max, grace, barPct=1, catPct=0.6, barThickness=48, maxBarThickness=48 } = {}) {
   return {
     responsive:true, maintainAspectRatio:false,
     interaction:{ mode:'index', intersect:false },
     layout:{ padding:{top:10,bottom:6,left:0,right:0} },
-    barPercentage: barPct,
-    categoryPercentage: catPct,
-    elements:{ bar:{ borderRadius:6, borderSkipped:false, ...(barThickness ? { barThickness } : {}) } },
+    datasets:{
+      bar:{
+        barPercentage: barPct,
+        categoryPercentage: catPct,
+        barThickness,
+        maxBarThickness
+      }
+    },
+    elements:{ bar:{ borderRadius:0, borderSkipped:false } },
     plugins:{
       legend:{ display:legend, position:'bottom', labels:{color:P.text,font:{size:11},usePointStyle:true,padding:10} },
       tooltip:{
