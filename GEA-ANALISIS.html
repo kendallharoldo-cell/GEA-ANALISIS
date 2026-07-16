@@ -354,16 +354,16 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #
     <div class="chart-subtitle">Con flechas de tendencia Q comisiones</div>
     <div id="agentes-list" style="margin-top:12px"></div>
   </div>
-  <div class="chart-grid">
-    <div class="chart-card">
+  <div class="chart-grid" style="grid-template-columns: 1.3fr 1fr; gap: 18px;">
+    <div class="chart-card" style="min-width: 0;">
       <div class="chart-title">Q Comisiones por Agente y Mes</div>
       <div class="chart-subtitle">Comparativa mensual</div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chartTMKQ" role="img" aria-label="Q comisiones por agente">Q comisiones por agente</canvas></div>
+      <div class="chart-wrap" style="height:320px"><canvas id="chartTMKQ" role="img" aria-label="Q comisiones por agente">Q comisiones por agente</canvas></div>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" style="min-width: 0;">
       <div class="chart-title">$ USD y Q GTQ — Comisiones</div>
       <div class="chart-subtitle">T/C: <span id="tc-label">Q7.62</span> por $1</div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chartTMKDollar" role="img" aria-label="Comisiones en USD y GTQ">Comisiones USD y GTQ</canvas></div>
+      <div class="chart-wrap" style="height:320px"><canvas id="chartTMKDollar" role="img" aria-label="Comisiones en USD y GTQ">Comisiones USD y GTQ</canvas></div>
     </div>
   </div>
   <div class="chart-card">
@@ -846,6 +846,7 @@ function renderResumen() {
   // TMK resumen
   const mTmk2 = Object.keys(DB.tmk).map(Number).sort((a,b)=>a-b);
   const mTmk2Visible = getMonthsForChart('resumen', mTmk2);
+  const tmkResumenColors = ['#2563eb','#1d4ed8','#3b82f6','#60a5fa','#1e40af','#93c5fd'];
   makeChart('chartTMKRes', {
     type:'bar',
     data:{
@@ -853,13 +854,13 @@ function renderResumen() {
       datasets: mTmk2Visible.map((m,i)=>({
         label: MESES_SHORT[m-1],
         data: DB.tmk[m].map(a=>a.q),
-        backgroundColor: P.blue,
-        borderColor: P.blue,
-        borderWidth: 1,
-        borderRadius:4
+        backgroundColor: tmkResumenColors[i % tmkResumenColors.length],
+        borderColor: tmkResumenColors[i % tmkResumenColors.length],
+        borderWidth: 2,
+        borderRadius: 0
       }))
     },
-    options: chartOpts({ ...getChartSpacing('resumen', mTmk2Visible), legend:true })
+    options: chartOpts({ ...getChartSpacing('resumen', mTmk2Visible), legend:true, barPct: 0.6, catPct: 0.45 })
   });
  
   // Rotación resumen
@@ -1214,6 +1215,7 @@ function renderTMK() {
  
   // Gráficas
   const visibleMesesTmk = getMonthsForChart('tmk', meses);
+  const tmkComparisonColors = ['#2563eb','#1d4ed8','#3b82f6','#60a5fa','#1e40af','#93c5fd'];
   makeChart('chartTMKQ', {
     type:'bar',
     data:{
@@ -1221,13 +1223,13 @@ function renderTMK() {
       datasets: visibleMesesTmk.map((m,i)=>({
         label:MESES_SHORT[m-1],
         data:DB.tmk[m].map(a=>a.q),
-        backgroundColor: P.blue,
-        borderColor: P.blue,
-        borderWidth:1,
-        borderRadius:4
+        backgroundColor: tmkComparisonColors[i % tmkComparisonColors.length],
+        borderColor: tmkComparisonColors[i % tmkComparisonColors.length],
+        borderWidth:2,
+        borderRadius:0
       }))
     },
-    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true })
+    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true, barPct: 0.45, catPct: 0.35 })
   });
  
   makeChart('chartTMKDollar', {
@@ -1246,7 +1248,7 @@ function renderTMK() {
         { label:'Q GTQ Último', data:DB.tmk[ultimo].map(a=>(a.d*tc).toFixed(2)), backgroundColor: P.blue, borderRadius:4, borderWidth:2, borderColor: P.blue }
       ]
     },
-    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD' })
+    options: chartOpts({ ...getChartSpacing('tmk', visibleMesesTmk), legend:true, barPct: 0.6, catPct: 0.45, tooltipCb: ctx=>ctx.dataset.label.startsWith('Q')?'Q'+parseFloat(ctx.parsed.y).toFixed(2)+' GTQ':'$'+parseFloat(ctx.parsed.y).toFixed(2)+' USD' })
   });
  
   // Tabla tendencia TMK
