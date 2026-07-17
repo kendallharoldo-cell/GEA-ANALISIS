@@ -808,12 +808,12 @@ function renderResumen() {
           const absDiff = last - prev;
           if (prev === 0) {
             if (absDiff > 0) label = `Crecimiento $${absDiff.toFixed(1)}`;
-            else if (absDiff < 0) label = `Decrecimiento $${Math.abs(absDiff).toFixed(1)}`;
+            else if (absDiff < 0) label = `Decremento $${Math.abs(absDiff).toFixed(1)}`;
             else label = 'Sin cambio';
           } else {
             const pct = (absDiff / prev) * 100;
             if (pct > 0) label = `Crecimiento ${pct.toFixed(1)}%`;
-            else if (pct < 0) label = `Decrecimiento ${Math.abs(pct).toFixed(1)}%`;
+            else if (pct < 0) label = `Decremento ${Math.abs(pct).toFixed(1)}%`;
             else label = 'Sin cambio';
           }
         }
@@ -983,12 +983,12 @@ function renderCabina() {
           const absDiff = last - prev;
           if (prev === 0) {
             if (absDiff > 0) label = `Crecimiento ${absDiff.toFixed(1)}pp`;
-            else if (absDiff < 0) label = `Decrecimiento ${Math.abs(absDiff).toFixed(1)}pp`;
+            else if (absDiff < 0) label = `Decremento ${Math.abs(absDiff).toFixed(1)}pp`;
             else label = 'Sin cambio';
           } else {
             const pct = (absDiff / prev) * 100;
             if (pct > 0) label = `Crecimiento ${pct.toFixed(2)}%`;
-            else if (pct < 0) label = `Decrecimiento ${Math.abs(pct).toFixed(2)}%`;
+            else if (pct < 0) label = `Decremento ${Math.abs(pct).toFixed(2)}%`;
             else label = 'Sin cambio';
           }
         }
@@ -1036,12 +1036,12 @@ function renderCabina() {
           const absDiff = last - prev;
           if (prev === 0) {
             if (absDiff > 0) label = `Crecimiento ${absDiff.toFixed(1)}pp`;
-            else if (absDiff < 0) label = `Decrecimiento ${Math.abs(absDiff).toFixed(1)}pp`;
+            else if (absDiff < 0) label = `Decremento ${Math.abs(absDiff).toFixed(1)}pp`;
             else label = 'Sin cambio';
           } else {
             const pct = (absDiff / prev) * 100;
             if (pct > 0) label = `Crecimiento ${pct.toFixed(2)}%`;
-            else if (pct < 0) label = `Decrecimiento ${Math.abs(pct).toFixed(2)}%`;
+            else if (pct < 0) label = `Decremento ${Math.abs(pct).toFixed(2)}%`;
             else label = 'Sin cambio';
           }
         }
@@ -1125,12 +1125,12 @@ function renderTMK() {
           const absDiff = last - prev;
           if (prev === 0) {
             if (absDiff > 0) label = `Crecimiento $${absDiff.toFixed(1)}`;
-            else if (absDiff < 0) label = `Decrecimiento $${Math.abs(absDiff).toFixed(1)}`;
+            else if (absDiff < 0) label = `Decremento $${Math.abs(absDiff).toFixed(1)}`;
             else label = 'Sin cambio';
           } else {
             const pct = (absDiff / prev) * 100;
             if (pct > 0) label = `Crecimiento ${pct.toFixed(1)}%`;
-            else if (pct < 0) label = `Decrecimiento ${Math.abs(pct).toFixed(1)}%`;
+            else if (pct < 0) label = `Decremento ${Math.abs(pct).toFixed(1)}%`;
             else label = 'Sin cambio';
           }
         }
@@ -1342,12 +1342,12 @@ function renderRotacion() {
           const absDiff = last - prev;
           if (prev === 0) {
             if (absDiff > 0) label = `Crecimiento ${absDiff.toFixed(1)}pp`;
-            else if (absDiff < 0) label = `Decrecimiento ${Math.abs(absDiff).toFixed(1)}pp`;
+            else if (absDiff < 0) label = `Decremento ${Math.abs(absDiff).toFixed(1)}pp`;
             else label = 'Sin cambio';
           } else {
             const pct = (absDiff / prev) * 100;
             if (pct > 0) label = `Crecimiento ${pct.toFixed(1)}%`;
-            else if (pct < 0) label = `Decrecimiento ${Math.abs(pct).toFixed(1)}%`;
+            else if (pct < 0) label = `Decremento ${Math.abs(pct).toFixed(1)}%`;
             else label = 'Sin cambio';
           }
         }
